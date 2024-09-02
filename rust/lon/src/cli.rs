@@ -1,4 +1,5 @@
 use std::{
+    fmt::Write,
     path::{Path, PathBuf},
     process::ExitCode,
 };
@@ -7,6 +8,7 @@ use anyhow::{bail, Context, Result};
 use clap::{Args, Parser, Subcommand};
 
 use crate::{
+    git,
     lock::Lock,
     lon_nix::LonNix,
     sources::{GitHubSource, GitSource, Source, Sources},
@@ -102,7 +104,12 @@ struct AddGitHubArgs {
 #[derive(Args)]
 struct UpdateArgs {
     /// Name of the source
-    name: String,
+    ///
+    /// If this is omitted, all sources are updated.
+    name: Option<String>,
+    /// Whether to commit lon.{nix,lock}.
+    #[arg(short, long, default_value_t = false)]
+    commit: bool,
 }
 
 #[derive(Args)]
@@ -236,22 +243,58 @@ fn add_github(directory: impl AsRef<Path>, args: &AddGitHubArgs) -> Result<()> {
 }
 
 fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
-    let name = &args.name;
-
     let mut sources = Sources::read(&directory)?;
 
-    let Some(source) = sources.get_mut(name) else {
-        bail!("Source {name} doesn't exist")
+    let mut names = Vec::new();
+
+    if let Some(ref name) = args.name {
+        names.push(name.to_string());
+    } else {
+        names.extend(sources.names().into_iter().map(ToString::to_string));
+    }
+
+    let mut summaries = Vec::new();
+
+    for name in &names {
+        let Some(source) = sources.get_mut(name) else {
+            bail!("Source {name} doesn't exist")
+        };
+
+        log::info!("Updating {name}...");
+
+        let summary = source
+            .update()
+            .with_context(|| format!("Failed to update {name}"))?;
+
+        if let Some(summary) = summary {
+            summaries.push((name, summary));
+        };
+    }
+
+    if summaries.is_empty() {
+        return Ok(());
     };
 
-    log::info!("Updating {name}...");
+    let mut commit_message = String::new();
+    writeln!(&mut commit_message, "lon.lock: update")?;
+    writeln!(&mut commit_message)?;
+    writeln!(&mut commit_message, "Updated sources:")?;
+    writeln!(&mut commit_message)?;
 
-    source
-        .update()
-        .with_context(|| format!("Failed to update {name}"))?;
+    for (name, summary) in summaries {
+        writeln!(&mut commit_message, "• {name}:")?;
+        writeln!(&mut commit_message, "    {}", summary.old_revision)?;
+        writeln!(&mut commit_message, "  → {}", summary.new_revision)?;
+    }
 
     sources.write(&directory)?;
     LonNix::update(&directory)?;
+
+    if args.commit {
+        git::add(&directory, &[&Lock::path(&directory)])?;
+        git::add(&directory, &[&LonNix::path(&directory)])?;
+        git::commit(&directory, &commit_message)?;
+    }
 
     Ok(())
 }

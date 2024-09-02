@@ -1,9 +1,9 @@
-use std::{fmt, process::Command};
+use std::{fmt, path::Path, process::Command};
 
 use anyhow::{bail, Context, Result};
 
 /// A git revision (aka commit).
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Revision(String);
 
 impl Revision {
@@ -90,4 +90,41 @@ fn ls_remote(args: &[&str]) -> Result<Vec<RemoteInfo>> {
             })
         })
         .collect::<Result<Vec<RemoteInfo>>>()
+}
+
+pub fn add(directory: impl AsRef<Path>, args: &[&Path]) -> Result<()> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(directory.as_ref())
+        .arg("add")
+        .args(args)
+        .output()
+        .context("Failed to execute git add. Most likely it's not on PATH")?;
+
+    if !output.status.success() {
+        bail!(
+            "Failed to add files to git statging\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    Ok(())
+}
+
+pub fn commit(directory: impl AsRef<Path>, message: &str) -> Result<()> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(directory.as_ref())
+        .arg("commit")
+        .arg("--message")
+        .arg(message)
+        .output()
+        .context("Failed to execute git commit. Most likely it's not on PATH")?;
+
+    if !output.status.success() {
+        bail!(
+            "Failed to commit files\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    Ok(())
 }

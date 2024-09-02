@@ -10,6 +10,26 @@ use crate::{
 
 const GITHUB_URL: &str = "https://github.com";
 
+/// Informaton summarizing an update.
+///
+/// Represents an update of a single source.
+pub struct UpdateSummary {
+    pub old_revision: Revision,
+    pub new_revision: Revision,
+}
+
+impl UpdateSummary {
+    /// Create a new update summary.
+    ///
+    /// Tries to determine the revision
+    pub fn new(old_revision: Revision, new_revision: Revision) -> Self {
+        Self {
+            old_revision,
+            new_revision,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Sources {
     map: BTreeMap<String, Source>,
@@ -53,6 +73,11 @@ impl Sources {
     pub fn contains(&self, name: &str) -> bool {
         self.map.contains_key(name)
     }
+
+    /// Return the list of source names.
+    pub fn names(&self) -> Vec<&String> {
+        self.map.keys().collect()
+    }
 }
 
 pub enum Source {
@@ -61,7 +86,7 @@ pub enum Source {
 }
 
 impl Source {
-    pub fn update(&mut self) -> Result<()> {
+    pub fn update(&mut self) -> Result<Option<UpdateSummary>> {
         match self {
             Self::Git(s) => s.update(),
             Self::GitHub(s) => s.update(),
@@ -112,25 +137,27 @@ impl GitSource {
     }
 
     /// Update the source by finding the newest commit.
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<Option<UpdateSummary>> {
         let newest_revision = git::find_newest_revision(&self.url, &self.branch)?;
 
-        if self.revision == newest_revision {
+        let current_revision = self.revision.clone();
+
+        if current_revision == newest_revision {
             log::info!("Already up to date");
-        } else {
-            log::info!("Updated revision: {} → {}", self.revision, newest_revision);
-            self.lock(newest_revision)?;
-        }
-        Ok(())
+            return Ok(None);
+        };
+        log::info!("Updated revision: {current_revision} → {newest_revision}");
+        self.lock(&newest_revision)?;
+        Ok(Some(UpdateSummary::new(current_revision, newest_revision)))
     }
 
     /// Lock the source to a new revision.
     ///
     /// In this case this means that the revision and hash.
-    fn lock(&mut self, revision: Revision) -> Result<()> {
+    fn lock(&mut self, revision: &Revision) -> Result<()> {
         let new_hash = Self::compute_hash(&self.url, revision.as_str(), self.submodules)?;
         log::info!("Updated hash: {} → {}", self.hash, new_hash);
-        self.revision = revision;
+        self.revision = revision.clone();
         self.hash = new_hash;
         Ok(())
     }
@@ -152,8 +179,8 @@ impl GitSource {
             if self.revision.as_str() == revision {
                 log::info!("Revision is already {revision}");
             } else {
-                self.lock(Revision::new(revision))?;
                 log::info!("Changed revision: {} → {}", self.revision, revision);
+                self.lock(&Revision::new(revision))?;
             }
         }
         Ok(())
@@ -199,27 +226,30 @@ impl GitHubSource {
     }
 
     /// Update the source by finding the newest commit.
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<Option<UpdateSummary>> {
         let newest_revision =
             git::find_newest_revision(&Self::git_url(&self.owner, &self.repo), &self.branch)?;
 
-        if self.revision == newest_revision {
+        let current_revision = self.revision.clone();
+
+        if current_revision == newest_revision {
             log::info!("Already up to date");
-        } else {
-            log::info!("Updated revision: {} → {}", self.revision, newest_revision);
-            self.lock(newest_revision)?;
-        }
-        Ok(())
+            return Ok(None);
+        };
+
+        log::info!("Updated revision: {current_revision} → {newest_revision}");
+        self.lock(&newest_revision)?;
+        Ok(Some(UpdateSummary::new(current_revision, newest_revision)))
     }
 
     /// Lock the source to a specific revision.
     ///
     /// In this case this means that the revision, hash, and URL is updated.
-    fn lock(&mut self, revision: Revision) -> Result<()> {
+    fn lock(&mut self, revision: &Revision) -> Result<()> {
         let new_url = Self::url(&self.owner, &self.repo, revision.as_str());
         let new_hash = Self::compute_hash(&new_url)?;
         log::info!("Updated hash: {} → {}", self.hash, new_hash);
-        self.revision = revision;
+        self.revision = revision.clone();
         self.hash = new_hash;
         self.url = new_url;
         Ok(())
@@ -242,8 +272,8 @@ impl GitHubSource {
             if self.revision.as_str() == revision {
                 log::info!("Revision is already {revision}");
             } else {
-                self.lock(Revision::new(revision))?;
                 log::info!("Changed revision: {} → {}", self.revision, revision);
+                self.lock(&Revision::new(revision))?;
             }
         }
         Ok(())
