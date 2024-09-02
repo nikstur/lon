@@ -80,6 +80,11 @@ in
   }
 ```
 
+You can update individual sources via `lon update nixpkgs` or all sources via
+`lon update`. You can even let Lon create a commit for the updates it performs
+via `lon update --commit`. The commit message will list all the updates
+performed similar to the way `nix flake update --commit-lock-file` does.
+
 ### Overriding a Source for Local Development
 
 You can use environment variables that follow the scheme `LON_OVERRIDE_${name}`
