@@ -38,7 +38,10 @@
       {
         systems = import systems;
 
-        imports = [ inputs.pre-commit-hooks-nix.flakeModule ];
+        imports = [
+          inputs.flake-parts.flakeModules.easyOverlay
+          inputs.pre-commit-hooks-nix.flakeModule
+        ];
 
         flake.nixosModules.lon-tests = moduleWithSystem (
           perSystem@{ config }:
@@ -59,6 +62,10 @@
           {
             packages = import ./nix/packages { inherit pkgs; } // {
               default = config.packages.lon;
+            };
+
+            overlayAttrs = {
+              inherit (config.packages) lon;
             };
 
             checks =
