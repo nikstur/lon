@@ -12,11 +12,6 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
-
     pre-commit-hooks-nix = {
       url = "github:cachix/pre-commit-hooks.nix";
       inputs = {
