@@ -280,7 +280,7 @@ fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
     };
 
     let mut commit_message = String::new();
-    writeln!(&mut commit_message, "lon.lock: update")?;
+    writeln!(&mut commit_message, "lon: update")?;
     writeln!(&mut commit_message)?;
     writeln!(&mut commit_message, "Updated sources:")?;
     writeln!(&mut commit_message)?;
