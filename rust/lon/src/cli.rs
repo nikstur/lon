@@ -253,6 +253,10 @@ fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
         names.extend(sources.names().into_iter().map(ToString::to_string));
     }
 
+    if names.is_empty() {
+        bail!("Lock file doesn't contain any sources")
+    };
+
     let mut summaries = Vec::new();
 
     for name in &names {
@@ -272,7 +276,7 @@ fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
     }
 
     if summaries.is_empty() {
-        return Ok(());
+        bail!("No updates available")
     };
 
     let mut commit_message = String::new();
