@@ -1,38 +1,24 @@
 use std::{fmt, process::Command};
 
 use anyhow::{Context, Result, bail};
+use nix_compat::nixhash::NixHash;
 use serde::{Deserialize, Serialize};
 
 /// A SRI hash.
 #[derive(Deserialize, Serialize, Clone)]
-pub struct SriHash(String);
+pub struct SriHash(NixHash);
 
 impl SriHash {
     /// Convert a Nix Bas32 hash to a Sha256 SRI hash.
     fn from_nix_base_32(nix_base32_hash: &str) -> Result<Self> {
-        let output = Command::new("nix-hash")
-            .arg("--type")
-            .arg("sha256")
-            .arg("--to-sri")
-            .arg(nix_base32_hash)
-            .output()
-            .context("Failed to execute nix-hash. Most likely it's not on PATH")?;
-
-        if !output.status.success() {
-            bail!(
-                "Failed to derive the SHA 256 SRI format of {nix_base32_hash}\n{}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(Self(String::from(stdout.trim())))
+        let hash = nix_compat::nixhash::from_str(nix_base32_hash, Some("sha256"))?;
+        Ok(Self(hash))
     }
 }
 
 impl fmt::Display for SriHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.0.to_sri_string())
     }
 }
 

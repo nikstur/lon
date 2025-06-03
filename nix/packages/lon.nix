@@ -24,6 +24,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoLock = {
     lockFile = ../../rust/lon/Cargo.lock;
+    outputHashes = {
+      "nix-compat-0.1.0" = "sha256-SKoNo5dJaCWr61lFKUldYfEYSXZp1gDax3pizdGdXLM=";
+    };
   };
 
   nativeBuildInputs = [ makeBinaryWrapper ];
