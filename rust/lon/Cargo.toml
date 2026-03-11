@@ -4,27 +4,27 @@ version = "0.8.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.98"
-log = "0.4.27"
+anyhow = "1.0.102"
+log = "0.4.29"
 stderrlog = "0.6.0"
-clap = { version = "4.5.38", features = ["derive"] }
-serde = { version = "1.0.219", features = [ "derive" ] }
-serde_json = "1.0.140"
-sha2 = "0.10.9"
-tempfile = "3.20.0"
-reqwest = { version = "0.12", default-features = false, features = ["blocking","http2","rustls-tls","json"] }
-nix-compat = { git = "https://git.snix.dev/snix/snix", rev = "43d5cc6538f7b7bdccd522b3545e090e824bbe5a", default-features = false, features = ["serde"] }
-regex = "1.11.1"
-serde_qs = "0.15.0"
+clap = { version = "4.6.1", features = ["derive"] }
+serde = { version = "1.0.228", features = [ "derive" ] }
+serde_json = "1.0.149"
+sha2 = "0.11.0"
+tempfile = "3.27.0"
+reqwest = { version = "0.13", default-features = false, features = ["blocking","http2","default-tls","json"] }
+nix-compat = { git = "https://git.snix.dev/snix/snix", rev = "e952b5ae99242baed8f6ffa1b98aa80f4f02911e", default-features = false, features = ["serde"] }
+regex = "1.12.3"
+serde_qs = "1.1.1"
 
 [dev-dependencies]
 expect-test = "1.5.1"
-assert_cmd = "2.0.17"
-tempfile = "3.20.0"
-indoc = "2.0.6"
+assert_cmd = "2.2.1"
+tempfile = "3.27.0"
+indoc = "2.0.7"
 
 [build-dependencies]
-sha2 = "0.10.9"
+sha2 = "0.11.0"
 
 [profile.release]
 opt-level = "s"

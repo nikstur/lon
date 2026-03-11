@@ -25,7 +25,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   cargoLock = {
     lockFile = ../../rust/lon/Cargo.lock;
     outputHashes = {
-      "nix-compat-0.1.0" = "sha256-6GK3/fH2WEyrhKn+U55chAlp1rrAAE9gmZxM23dGWY8=";
+      "nix-compat-0.1.0" = lib.fakeHash;
     };
   };
 
