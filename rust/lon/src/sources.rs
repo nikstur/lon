@@ -1,4 +1,8 @@
-use std::{collections::BTreeMap, path::Path};
+use std::{
+    collections::{BTreeMap, btree_map::Iter},
+    fmt,
+    path::Path,
+};
 
 use anyhow::{Context, Result, bail};
 use nix_compat::nixhash::NixHash;
@@ -128,6 +132,11 @@ impl Sources {
     pub fn names(&self) -> Vec<&String> {
         self.map.keys().collect()
     }
+
+    /// Return an iterator over the sources
+    pub fn iter(&self) -> Iter<'_, String, Source> {
+        self.map.iter()
+    }
 }
 
 #[derive(Clone)]
@@ -207,6 +216,22 @@ impl Source {
     }
 }
 
+impl fmt::Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Source::Git(s) => {
+                write!(f, "  Type: Git\n{s}")
+            }
+            Source::GitHub(s) => {
+                write!(f, "  Type: GitHub\n{s}")
+            }
+            Source::Tarball(s) => {
+                write!(f, "  Type: Tarball\n{s}")
+            }
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct GitSource {
     url: String,
@@ -219,6 +244,19 @@ pub struct GitSource {
     submodules: bool,
 
     frozen: bool,
+}
+
+impl fmt::Display for GitSource {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        [
+            ("Url", &self.url),
+            ("Branch", &self.branch),
+            ("Revision", &self.revision.as_str().into()),
+            ("Frozen", &self.frozen.to_string()),
+        ]
+        .iter()
+        .try_for_each(|(k, v)| writeln!(f, "  {k}: {v}"))
+    }
 }
 
 impl GitSource {
@@ -347,6 +385,19 @@ pub struct GitHubSource {
     hash: NixHash,
 
     frozen: bool,
+}
+
+impl fmt::Display for GitHubSource {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        [
+            ("Repository", &format!("{}/{}", &self.owner, &self.repo)),
+            ("Branch", &self.branch),
+            ("Revision", &self.revision.as_str().into()),
+            ("Frozen", &self.frozen.to_string()),
+        ]
+        .iter()
+        .try_for_each(|(k, v)| writeln!(f, "  {k}: {v}"))
+    }
 }
 
 impl GitHubSource {
@@ -483,6 +534,17 @@ pub struct TarballSource {
     revision: Option<String>,
 
     frozen: bool,
+}
+
+impl fmt::Display for TarballSource {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(origin) = &self.origin {
+            writeln!(f, "  Origin: {origin}")?;
+        }
+        [("Locked", &self.url), ("Frozen", &self.frozen.to_string())]
+            .iter()
+            .try_for_each(|(k, v)| writeln!(f, "  {k}: {v}"))
+    }
 }
 
 #[derive(Clone)]
