@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use nix_compat::nixhash::NixHash;
 use regex::Regex;
 use reqwest::{
     Url,
@@ -18,7 +17,8 @@ use serde::Deserialize;
 use crate::{
     git::{self, RevList, Revision},
     http::GitHubRepoApi,
-    lock, nix,
+    lock,
+    nix::{self, SriHash},
 };
 
 const GITHUB_URL: &str = "https://github.com";
@@ -237,7 +237,7 @@ pub struct GitSource {
     url: String,
     branch: String,
     revision: Revision,
-    hash: NixHash,
+    hash: SriHash,
     last_modified: Option<u64>,
 
     /// Whether to fetch submodules
@@ -368,8 +368,8 @@ impl GitSource {
         Ok(())
     }
 
-    /// Compute the hash for this source type.
-    fn compute_hash(url: &str, revision: &str, submodules: bool) -> Result<NixHash> {
+    /// Computing the hash for this source type.
+    fn compute_hash(url: &str, revision: &str, submodules: bool) -> Result<SriHash> {
         nix::prefetch_git(url, revision, submodules)
             .with_context(|| format!("Failed to compute hash for {url}@{revision}"))
     }
@@ -382,7 +382,7 @@ pub struct GitHubSource {
     branch: String,
     revision: Revision,
     url: String,
-    hash: NixHash,
+    hash: SriHash,
 
     frozen: bool,
 }
@@ -508,7 +508,7 @@ impl GitHubSource {
     }
 
     /// Compute the hash for this source type.
-    fn compute_hash(url: &str) -> Result<NixHash> {
+    fn compute_hash(url: &str) -> Result<SriHash> {
         nix::prefetch_tarball(url).with_context(|| format!("Failed to compute hash for {url}"))
     }
 
@@ -530,7 +530,7 @@ pub struct TarballSource {
     /// The `url` field is resolved from the LINK tag returned by URL from the origin field.
     origin: Option<String>,
     url: String,
-    hash: NixHash,
+    hash: SriHash,
     revision: Option<String>,
 
     frozen: bool,
@@ -557,7 +557,7 @@ struct TarballFlakeRef {
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TarballRef {
-    nar_hash: Option<NixHash>,
+    nar_hash: Option<SriHash>,
     rev: Option<String>,
 }
 
@@ -692,7 +692,7 @@ impl TarballSource {
     }
 
     /// Compute the hash for this source type.
-    fn compute_hash(url: &str) -> Result<NixHash> {
+    fn compute_hash(url: &str) -> Result<SriHash> {
         nix::prefetch_tarball(url).with_context(|| format!("Failed to compute hash for {url}"))
     }
 
