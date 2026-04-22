@@ -61,6 +61,8 @@ enum Commands {
     Freeze(SourceArgs),
     /// Unfreeze an existing source
     Unfreeze(SourceArgs),
+    /// Show the list of sources or a specific source
+    Show { name: Option<String> },
 
     /// Bot that opens PRs for updates
     Bot {
@@ -243,6 +245,7 @@ impl Commands {
             Self::Remove(args) => remove(directory, &args),
             Self::Freeze(args) => freeze(directory, &args),
             Self::Unfreeze(args) => unfreeze(directory, &args),
+            Self::Show { name } => show(directory, name),
 
             Self::Bot { commands } => match commands {
                 BotCommands::GitLab => bot(directory, &GitLab::from_env()?),
@@ -480,6 +483,27 @@ fn unfreeze(directory: impl AsRef<Path>, args: &SourceArgs) -> Result<()> {
 
     sources.write(&directory)?;
     LonNix::update(&directory)?;
+
+    Ok(())
+}
+
+fn show(directory: impl AsRef<Path>, name: Option<String>) -> Result<()> {
+    let mut sources = Sources::read(&directory)?;
+
+    match name {
+        Some(name) => {
+            let Some(source) = sources.get_mut(&name) else {
+                bail!("Source {name} doesn't exist")
+            };
+
+            println!("{name}:\n{source}");
+        }
+        None => {
+            for (name, source) in sources.iter() {
+                println!("{name}:\n{source}");
+            }
+        }
+    }
 
     Ok(())
 }
