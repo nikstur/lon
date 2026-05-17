@@ -4,7 +4,7 @@ use std::{
     process::ExitCode,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{
@@ -392,12 +392,15 @@ fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
 
         log::info!("Updating {name}...");
 
-        let summary = source
-            .update()
-            .with_context(|| format!("Failed to update {name}"))?;
-
-        if let Some(summary) = summary {
-            commit_message.add_summary(name, summary);
+        match source.update() {
+            Ok(summary) => {
+                if let Some(summary) = summary {
+                    commit_message.add_summary(name, summary);
+                }
+            }
+            Err(e) => {
+                log::warn!("Failed to update {name}: {e}");
+            }
         }
     }
 
@@ -556,9 +559,13 @@ fn bot_fallible(directory: impl AsRef<Path>, forge: &impl Forge, base_ref: &str)
 
         log::info!("Updating {name}...");
 
-        let summary = source
-            .update()
-            .with_context(|| format!("Failed to update {name}"))?;
+        let summary = match source.update() {
+            Ok(summary) => summary,
+            Err(e) => {
+                log::warn!("Failed to update {name}: {e}");
+                continue;
+            }
+        };
 
         let Some(mut summary) = summary else {
             log::info!("No updates available");
