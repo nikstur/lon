@@ -163,6 +163,10 @@ struct UpdateArgs {
     /// Whether to commit lon.{nix,lock}.
     #[arg(short, long, default_value_t = false)]
     commit: bool,
+    /// Whether to continue to try to update sources
+    /// when a source fails to update.
+    #[arg(short, long, default_value_t = false)]
+    r#continue: bool,
 }
 
 #[derive(Args)]
@@ -392,9 +396,19 @@ fn update(directory: impl AsRef<Path>, args: &UpdateArgs) -> Result<()> {
 
         log::info!("Updating {name}...");
 
-        let summary = source
+        let summary = match source
             .update()
-            .with_context(|| format!("Failed to update {name}"))?;
+            .with_context(|| format!("Failed to update {name}"))
+        {
+            Ok(summary) => summary,
+            Err(error) => {
+                if args.r#continue {
+                    log::warn!("Skipping: {error}");
+                    continue;
+                }
+                Err(error)?
+            }
+        };
 
         if let Some(summary) = summary {
             commit_message.add_summary(name, summary);
