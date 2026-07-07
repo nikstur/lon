@@ -5,7 +5,7 @@ in
 pkgs.mkShell {
   packages = [
     pkgs.niv
-    pkgs.nixfmt-rfc-style
+    pkgs.nixfmt
     pkgs.nix-prefetch-git
     pkgs.clippy
     pkgs.rustfmt
