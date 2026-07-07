@@ -165,7 +165,7 @@ struct UpdateArgs {
     commit: bool,
     /// Whether to continue to try to update sources
     /// when a source fails to update.
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     r#continue: bool,
 }
 
