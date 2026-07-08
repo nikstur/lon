@@ -223,12 +223,7 @@ impl Cli {
         match cli.commands.call(directory) {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => {
-                // When at least one -v is added, the source of the error is also printed.
-                if DEFAULT_LOG_LEVEL + usize::from(cli.verbose) >= 3 {
-                    log::error!("{err:#}");
-                } else {
-                    log::error!("{err}");
-                }
+                log::error!("{err:#}");
                 ExitCode::FAILURE
             }
         }
