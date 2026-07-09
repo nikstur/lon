@@ -28,6 +28,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   nativeBuildInputs = [ makeBinaryWrapper ];
 
+  checkFlags = [ "--show-output" ];
+  nativeCheckInputs = [
+    git
+    nix
+    nix-prefetch-git
+  ];
+
   postInstall = ''
     wrapProgram $out/bin/lon --prefix PATH : ${
       lib.makeBinPath [
