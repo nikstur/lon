@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 lon contributors
+# SPDX-FileCopyrightText: 2026 lon contributors
 #
 # SPDX-License-Identifier: MIT
 
