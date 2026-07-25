@@ -1,32 +1,17 @@
 let
   sources = import ../lon.nix;
   pkgs = import sources.nixpkgs { };
-  pre-commit = import sources.pre-commit;
+  pre-commit.run = pkgs.callPackage "${sources.pre-commit}/nix/run.nix" {
+    inherit pkgs;
+    tools = import "${sources.pre-commit}/nix/call-tools.nix" pkgs;
+    isFlakes = false;
+  };
 in
 pre-commit.run {
-  src = ./.;
+  src = ../.;
 
   hooks = {
-    nixfmt-rfc-style = {
-      enable = true;
-    };
-    clippy = {
-      enable = true;
-      packageOverrides = {
-        cargo = pkgs.cargo;
-        clippy = pkgs.clippy;
-      };
-    };
-    rustfmt = {
-      enable = true;
-      packageOverrides = {
-        cargo = pkgs.cargo;
-        rustfmt = pkgs.rustfmt;
-      };
-    };
-  };
-
-  settings = {
-    rust.cargoManifestPath = "rust/lon/Cargo.toml";
+    nixfmt.enable = true;
+    deadnix.enable = true;
   };
 }

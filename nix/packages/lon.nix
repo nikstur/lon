@@ -5,12 +5,14 @@
   nix,
   nix-prefetch-git,
   git,
+  clippy,
+  rustfmt,
 }:
 
 let
   cargoToml = builtins.fromTOML (builtins.readFile ../../rust/lon/Cargo.toml);
 in
-rustPlatform.buildRustPackage (_finalAttrs: {
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = cargoToml.package.name;
   inherit (cargoToml.package) version;
 
@@ -34,6 +36,22 @@ rustPlatform.buildRustPackage (_finalAttrs: {
     nix
     nix-prefetch-git
   ];
+
+  passthru.tests = {
+    lint-format = finalAttrs.finalPackage.overrideAttrs (
+      _: previousAttrs: {
+        pname = previousAttrs.pname + "-lint-format";
+        nativeCheckInputs = (previousAttrs.nativeCheckInputs or [ ]) ++ [
+          clippy
+          rustfmt
+        ];
+        checkPhase = ''
+          cargo clippy
+          cargo fmt --check
+        '';
+      }
+    );
+  };
 
   postInstall = ''
     wrapProgram $out/bin/lon --prefix PATH : ${
