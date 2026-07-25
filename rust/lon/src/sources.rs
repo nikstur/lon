@@ -390,7 +390,7 @@ pub struct GitHubSource {
 impl fmt::Display for GitHubSource {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         [
-            ("Repository", &format!("{}/{}", &self.owner, &self.repo)),
+            ("Repository", &format!("{}/{}", self.owner, self.repo)),
             ("Branch", &self.branch),
             ("Revision", &self.revision.as_str().into()),
             ("Frozen", &self.frozen.to_string()),

@@ -90,7 +90,7 @@ impl Convertible for LockFile {
         let mut sources = Sources::default();
 
         if self.version == 1 {
-            bail!("Unsupported npins lockfile version: {}", &self.version)
+            bail!("Unsupported npins lockfile version: {}", self.version)
         }
 
         let re = Regex::new(
