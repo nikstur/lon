@@ -328,3 +328,14 @@ All the tests are included in the flake checks. You can run all of them via
 
 Lon is heavily inspired by [niv](https://github.com/nmattia/niv) and
 [npins](https://github.com/andir/npins) and builds on their success.
+
+Lon differs from these tools in these key ways:
+
+- It is Lix native. It can use all the new features in Lix (e.g. fixed outputs
+  for fetchGit sources). However, it is still compatible with Nix (just like
+  Lix itself is).
+- It has a built-in update bot for GitHub, GitLab, and Forgejo that allows you
+  Renovate-style automatic updates.
+- It is simple, keeping complexity deliberately low. This is especially
+  important for `lon.nix` which is vendored into the source tree of every
+  single user.
