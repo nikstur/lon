@@ -12,6 +12,8 @@ rec {
   checks = lib.recurseIntoAttrs {
     pre-commit = import ./nix/pre-commit.nix;
 
+    inherit (packages.lon.tests) lint-format;
+
     tests = lib.recurseIntoAttrs (
       import ./nix/tests {
         inherit pkgs;

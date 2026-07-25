@@ -5,6 +5,8 @@
   nix,
   nix-prefetch-git,
   git,
+  clippy,
+  rustfmt,
 }:
 
 let
@@ -34,6 +36,22 @@ rustPlatform.buildRustPackage (finalAttrs: {
     nix
     nix-prefetch-git
   ];
+
+  passthru.tests = {
+    lint-format = finalAttrs.finalPackage.overrideAttrs (
+      _: previousAttrs: {
+        pname = previousAttrs.pname + "-lint-format";
+        nativeCheckInputs = (previousAttrs.nativeCheckInputs or [ ]) ++ [
+          clippy
+          rustfmt
+        ];
+        checkPhase = ''
+          cargo clippy
+          cargo fmt --check
+        '';
+      }
+    );
+  };
 
   postInstall = ''
     wrapProgram $out/bin/lon --prefix PATH : ${

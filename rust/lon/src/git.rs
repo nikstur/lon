@@ -152,7 +152,7 @@ pub fn find_default_branch(url: &str) -> Result<String> {
         .lines()
         .find_map(|x| re.captures(x).map(|matched| matched["branch"].into()))
     else {
-        bail!("Failed to find the default branch for {url}",)
+        bail!("Failed to find the default branch for {url}")
     };
 
     Ok(branch)
@@ -175,7 +175,7 @@ fn ls_remote(args: &[&str]) -> Result<Vec<RemoteInfo>> {
             .filter(|line| !line.is_empty())
             .collect::<Vec<&str>>()
             .join(" ");
-        anyhow::bail!("git ls-remote failed with exit code {status_code}:\n{stderr_output}",);
+        anyhow::bail!("git ls-remote failed with exit code {status_code}:\n{stderr_output}");
     }
 
     String::from_utf8_lossy(&output.stdout)

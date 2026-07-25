@@ -6,7 +6,7 @@
 }:
 
 lon.overrideAttrs (
-  finalAttrs: previousAttrs: {
+  _finalAttrs: previousAttrs: {
     pname = "lon-tests";
 
     nativeBuildInputs = previousAttrs.nativeBuildInputs or [ ] ++ [ jq ];
@@ -19,15 +19,13 @@ lon.overrideAttrs (
       )
     '';
 
-    postInstall =
-      previousAttrs.postInstall
-      + ''
-        find /build/source/target/${stdenv.targetPlatform.rust.rustcTarget}/release/deps/ \
-          -name "integration-*" \
-          -type f \
-          -executable \
-          -execdir install -D {} $out/bin/lon-tests \;
-      '';
+    postInstall = previousAttrs.postInstall + ''
+      find /build/source/target/${stdenv.targetPlatform.rust.rustcTarget}/release/deps/ \
+        -name "integration-*" \
+        -type f \
+        -executable \
+        -execdir install -D {} $out/bin/lon-tests \;
+    '';
 
     doCheck = false;
 
