@@ -27,7 +27,7 @@ let
   fetchSource =
     args@{ fetchType, ... }:
     if fetchType == "git" then
-      builtins.fetchGit (
+      fetchGit (
         {
           url = args.url;
           ref = args.branch;
@@ -46,12 +46,12 @@ let
         )
       )
     else if fetchType == "tarball" then
-      builtins.fetchTarball {
+      fetchTarball {
         url = args.url;
         sha256 = args.hash;
       }
     else
-      builtins.throw "Unsupported source type ${fetchType}";
+      throw "Unsupported source type ${fetchType}";
 
 in
 builtins.mapAttrs (name: args: overrideFromEnv name (fetchSource args)) lock.sources
