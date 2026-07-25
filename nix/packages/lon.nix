@@ -10,7 +10,7 @@
 let
   cargoToml = builtins.fromTOML (builtins.readFile ../../rust/lon/Cargo.toml);
 in
-rustPlatform.buildRustPackage (finalAttrs: {
+rustPlatform.buildRustPackage (_finalAttrs: {
   pname = cargoToml.package.name;
   inherit (cargoToml.package) version;
 

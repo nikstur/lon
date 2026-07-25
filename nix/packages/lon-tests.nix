@@ -6,7 +6,7 @@
 }:
 
 lon.overrideAttrs (
-  finalAttrs: previousAttrs: {
+  _finalAttrs: previousAttrs: {
     pname = "lon-tests";
 
     nativeBuildInputs = previousAttrs.nativeBuildInputs or [ ] ++ [ jq ];
