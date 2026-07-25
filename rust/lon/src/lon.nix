@@ -21,24 +21,15 @@ let
   fetchSource =
     args@{ fetchType, ... }:
     if fetchType == "git" then
-      fetchGit (
-        {
-          url = args.url;
-          ref = args.branch;
-          rev = args.revision;
-          narHash = args.hash;
-          submodules = args.submodules;
-        }
-        // (
-          if args ? lastModified then
-            {
-              inherit (args) lastModified;
-              shallow = true;
-            }
-          else
-            { }
-        )
-      )
+      fetchGit {
+        url = args.url;
+        ref = args.branch;
+        rev = args.revision;
+        narHash = args.hash;
+        submodules = args.submodules;
+        lastModified = args.lastModified;
+        shallow = true;
+      }
     else if fetchType == "tarball" then
       fetchTarball {
         url = args.url;
