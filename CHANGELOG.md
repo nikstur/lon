@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0 (Unreleased)
+
+- Added the flag `--continue` to the `update` command to continue updating
+  sources even if one of the sources fails to update
+- Added the subcommand `show` to display all locked sources in a human
+  readable format.
+
 ## 0.8.0
 
 - Fixed `update --commit` when supplying a directory via `-d`.
