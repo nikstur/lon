@@ -2,6 +2,8 @@
   lib,
   rustPlatform,
   makeBinaryWrapper,
+  pkg-config,
+  openssl,
   nix,
   nix-prefetch-git,
   git,
@@ -28,7 +30,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     lockFile = ../../rust/lon/Cargo.lock;
   };
 
-  nativeBuildInputs = [ makeBinaryWrapper ];
+  nativeBuildInputs = [
+    makeBinaryWrapper
+    pkg-config
+  ];
+
+  buildInputs = [
+    openssl
+  ];
 
   checkFlags = [ "--show-output" ];
   nativeCheckInputs = [
