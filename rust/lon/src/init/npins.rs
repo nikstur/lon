@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{Context, Result, bail};
-use regex::Regex;
+use regex_lite::Regex;
 use serde::Deserialize;
 
 use crate::{

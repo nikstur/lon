@@ -2,6 +2,8 @@
   lib,
   rustPlatform,
   makeBinaryWrapper,
+  pkg-config,
+  openssl,
   nix,
   nix-prefetch-git,
   git,
@@ -10,7 +12,7 @@
 }:
 
 let
-  cargoToml = builtins.fromTOML (builtins.readFile ../../rust/lon/Cargo.toml);
+  cargoToml = fromTOML (builtins.readFile ../../rust/lon/Cargo.toml);
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = cargoToml.package.name;
@@ -28,7 +30,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
     lockFile = ../../rust/lon/Cargo.lock;
   };
 
-  nativeBuildInputs = [ makeBinaryWrapper ];
+  nativeBuildInputs = [
+    makeBinaryWrapper
+    pkg-config
+  ];
+
+  buildInputs = [
+    openssl
+  ];
 
   checkFlags = [ "--show-output" ];
   nativeCheckInputs = [

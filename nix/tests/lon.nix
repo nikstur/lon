@@ -60,7 +60,7 @@
         };
 
         systemd.tmpfiles.settings."10-git" = {
-          "/home/git/repo.git".C.argument = builtins.toString gitRepo;
+          "/home/git/repo.git".C.argument = toString gitRepo;
           "/home/git/repo.git".Z.user = "git";
         };
       };

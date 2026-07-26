@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use regex::Regex;
+use regex_lite::Regex;
 use tempfile::TempDir;
 
 #[derive(Clone, Debug)]

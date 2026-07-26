@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (Unreleased)
+## 1.0.0
 
 - Added the flag `--continue` to the `update` command to continue updating
   sources even if one of the sources fails to update
