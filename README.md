@@ -15,9 +15,7 @@ Lock & update Nix dependencies.
 
 ## Installation
 
-The easiest way to use Lon is directly from Nixpkgs. It is currently available
-in the `nixos-unstable` branch and will be included in NixOS releases starting
-from 25.05.
+The easiest way to use Lon is directly from Nixpkgs.
 
 You can also invoke it via `nix run github:nikstur/lon`.
 
@@ -33,6 +31,7 @@ Commands:
   remove    Remove an existing source
   freeze    Freeze an existing source
   unfreeze  Unfreeze an existing source
+  show      Show the list of sources or a specific source
   bot       Bot that opens PRs for updates
   help      Print this message or the help of the given subcommand(s)
 
@@ -306,14 +305,14 @@ Lon has a growing test suite that consists of two parts:
 
 The VM tests are also written in Rust but are ignored when you call `cargo
 test`. They are designed to only run inside a VM because they access resources
-mocked by another VM. You can call these VM tests via `nix build
-.#checks.x86_64-linux.lon`.
+mocked by another VM. You can call these VM tests via `nix-build -A
+checks.tests`.
 
 You can add another VM test by creating one in inside the `ignored` module of
 the Rust integration tests.
 
 All the tests are included in the flake checks. You can run all of them via
-`nix flake check`.
+`nix-build -A checks`.
 
 ### Invariants
 
@@ -329,3 +328,14 @@ All the tests are included in the flake checks. You can run all of them via
 
 Lon is heavily inspired by [niv](https://github.com/nmattia/niv) and
 [npins](https://github.com/andir/npins) and builds on their success.
+
+Lon differs from these tools in these key ways:
+
+- It is Lix native. It can use all the new features in Lix (e.g. fixed outputs
+  for fetchGit sources). However, it is still compatible with Nix (just like
+  Lix itself is).
+- It has a built-in update bot for GitHub, GitLab, and Forgejo that allows you
+  Renovate-style automatic updates.
+- It is simple, keeping complexity deliberately low. This is especially
+  important for `lon.nix` which is vendored into the source tree of every
+  single user.

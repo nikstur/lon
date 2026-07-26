@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0 (Unreleased)
+
+- Added the flag `--continue` to the `update` command to continue updating
+  sources even if one of the sources fails to update
+- Added the subcommand `show` to display all locked sources in a human
+  readable format.
+- Removed as much unnecessary code from `lon.nix` as possible. `lon.nix` should
+  always be a simple and easy to read wrapper for `lon.lock` since it needs to
+  be vendored by all users.
+
 ## 0.8.0
 
 - Fixed `update --commit` when supplying a directory via `-d`.
