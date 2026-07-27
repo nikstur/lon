@@ -1,12 +1,11 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::{Context, Result, bail};
-use regex_lite::Regex;
 use serde::Deserialize;
 
 use crate::{
     init::Convertible,
-    sources::{GitHubSource, GitSource, Source, Sources},
+    sources::{GitHubSource, GitSource, Source, Sources, TarballSource},
 };
 
 #[derive(Debug, Deserialize)]
@@ -93,10 +92,6 @@ impl Convertible for LockFile {
             bail!("Unsupported npins lockfile version: {}", self.version)
         }
 
-        let re = Regex::new(
-            r"https://releases\.nixos\.org/.*\.(?<shortrev>[a-f0-9]+)/nixexprs\.tar\.xz",
-        )?;
-
         for (name, pin) in &self.pins {
             log::info!("Converting {name}...");
 
@@ -105,19 +100,11 @@ impl Convertible for LockFile {
                     channel,
                     url,
                     frozen,
-                } => {
-                    let Some(matched) = re.captures(url) else {
-                        bail!("Cannot extract revision from the channel url: {url}")
-                    };
-
-                    Source::GitHub(GitHubSource::new(
-                        "NixOS",
-                        "nixpkgs",
-                        Some(channel),
-                        Some(&matched["shortrev"].into()),
-                        *frozen,
-                    )?)
-                }
+                } => Source::Tarball(TarballSource::from_channel(
+                    channel,
+                    url.to_owned(),
+                    *frozen,
+                )?),
                 Pin::Git {
                     repository,
                     branch,

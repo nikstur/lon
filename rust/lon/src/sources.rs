@@ -606,6 +606,27 @@ impl TarballSource {
         Ok(source)
     }
 
+    pub fn from_channel(channel: &String, url: String, frozen: bool) -> Result<Self> {
+        let locked_url = Url::parse(&url)?;
+        let Some(mut path) = locked_url.path_segments() else {
+            bail!("Invalid locked url: '{url}'");
+        };
+
+        let Some(target) = path.next_back() else {
+            bail!("Missing target in url: '{url}'");
+        };
+
+        let hash = Self::compute_hash(&url)?;
+
+        Ok(Self {
+            origin: Some(format!("https://channels.nixos.org/{channel}/{target}")),
+            revision: None,
+            url,
+            hash,
+            frozen,
+        })
+    }
+
     /// Update the source.
     fn update(&mut self) -> Result<Option<UpdateSummary>> {
         if self.frozen {
