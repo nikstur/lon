@@ -160,11 +160,12 @@ impl Source {
         branch: Option<&String>,
         revision: Option<&String>,
         url: Option<&String>,
+        hash: bool,
     ) -> Result<()> {
         match self {
-            Self::Git(s) => s.modify(branch, revision, url),
-            Self::GitHub(s) => s.modify(branch, revision, url),
-            Self::Tarball(s) => s.modify(branch, revision, url),
+            Self::Git(s) => s.modify(branch, revision, url, hash),
+            Self::GitHub(s) => s.modify(branch, revision, url, hash),
+            Self::Tarball(s) => s.modify(branch, revision, url, hash),
         }
     }
 
@@ -342,7 +343,9 @@ impl GitSource {
         branch: Option<&String>,
         revision: Option<&String>,
         url: Option<&String>,
+        hash: bool,
     ) -> Result<()> {
+        let mut rehash = hash;
         if let Some(branch) = branch {
             if self.branch == *branch {
                 log::info!("Branch is already {branch}");
@@ -350,7 +353,10 @@ impl GitSource {
                 log::info!("Changed branch: {} → {}", self.branch, branch);
                 self.branch = branch.into();
                 if revision.is_none() {
-                    self.update()?;
+                    if !self.update()?.is_none() {
+                        // skip rehash if the update did something
+                        rehash = false;
+                    };
                 }
             }
         }
@@ -360,10 +366,14 @@ impl GitSource {
             } else {
                 log::info!("Changed revision: {} → {}", self.revision, revision);
                 self.lock(&Revision::new(revision))?;
+                rehash = false;
             }
         }
         if url.is_some() {
             log::warn!("Cannot update URL of git sources");
+        }
+        if rehash {
+            self.lock(&self.revision.clone())?;
         }
         Ok(())
     }
@@ -481,7 +491,9 @@ impl GitHubSource {
         branch: Option<&String>,
         revision: Option<&String>,
         url: Option<&String>,
+        hash: bool,
     ) -> Result<()> {
+        let mut rehash = hash;
         if let Some(branch) = branch {
             if self.branch == *branch {
                 log::info!("Branch is already {branch}");
@@ -489,7 +501,10 @@ impl GitHubSource {
                 log::info!("Changed branch: {} → {}", self.branch, branch);
                 self.branch = branch.into();
                 if revision.is_none() {
-                    self.update()?;
+                    if !self.update()?.is_none() {
+                        // skip rehash if the update did something
+                        rehash = false;
+                    };
                 }
             }
         }
@@ -499,10 +514,14 @@ impl GitHubSource {
             } else {
                 log::info!("Changed revision: {} → {}", self.revision, revision);
                 self.lock(&Revision::new(revision))?;
+                rehash = false;
             }
         }
         if url.is_some() {
             log::warn!("Cannot update URL of GitHub sources");
+        }
+        if rehash {
+            self.lock(&self.revision.clone())?;
         }
         Ok(())
     }
@@ -690,24 +709,30 @@ impl TarballSource {
         branch: Option<&String>,
         revision: Option<&String>,
         url: Option<&String>,
+        hash: bool,
     ) -> Result<()> {
+        let mut rehash = hash;
         if branch.is_some() {
             log::warn!("Cannot update branch of tarball sources");
         }
         if revision.is_some() {
             log::warn!("Cannot update revision of tarball source");
         }
-        if self.origin.is_some() {
-            log::warn!("Cannot update URL of this source because it's lockable");
-            return Ok(());
-        }
         if let Some(url) = url {
-            if self.url == *url {
-                log::info!("URL is already {url}");
+            if self.origin.is_some() {
+                log::warn!("Cannot update URL of this source because it's lockable");
             } else {
-                log::info!("Changed URL: {} → {}", self.url, url);
-                self.lock(url)?;
+                if self.url == *url {
+                    log::info!("URL is already {url}");
+                } else {
+                    log::info!("Changed URL: {} → {}", self.url, url);
+                    self.lock(url)?;
+                    rehash = false;
+                }
             }
+        }
+        if rehash {
+            self.lock(&self.url.clone())?;
         }
         Ok(())
     }

@@ -182,6 +182,9 @@ struct ModifyArgs {
     /// URL to change
     #[arg(short, long)]
     url: Option<String>,
+    /// Recompute the hash
+    #[arg(long)]
+    hash: bool,
 }
 
 #[derive(Args)]
@@ -437,6 +440,7 @@ fn modify(directory: impl AsRef<Path>, args: &ModifyArgs) -> Result<()> {
         args.branch.as_ref(),
         args.revision.as_ref(),
         args.url.as_ref(),
+        args.hash,
     )?;
 
     sources.write(&directory)?;
