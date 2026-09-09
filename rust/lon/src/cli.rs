@@ -55,6 +55,8 @@ enum Commands {
     ///
     /// When you change the revision, the source is locked to this revision.
     Modify(ModifyArgs),
+    /// Re-lock the hash of an existing source
+    Lock(LockArgs),
     /// Remove an existing source
     Remove(SourceArgs),
     /// Freeze an existing source
@@ -185,6 +187,12 @@ struct ModifyArgs {
 }
 
 #[derive(Args)]
+struct LockArgs {
+    /// Name of the source
+    name: String,
+}
+
+#[derive(Args)]
 struct SourceArgs {
     /// Name of the source
     name: String,
@@ -241,6 +249,7 @@ impl Commands {
             },
             Self::Update(args) => update(directory, &args),
             Self::Modify(args) => modify(directory, &args),
+            Self::Lock(args) => lock(directory, &args),
             Self::Remove(args) => remove(directory, &args),
             Self::Freeze(args) => freeze(directory, &args),
             Self::Unfreeze(args) => unfreeze(directory, &args),
@@ -438,6 +447,23 @@ fn modify(directory: impl AsRef<Path>, args: &ModifyArgs) -> Result<()> {
         args.revision.as_ref(),
         args.url.as_ref(),
     )?;
+
+    sources.write(&directory)?;
+    LonNix::update(&directory)?;
+
+    Ok(())
+}
+
+fn lock(directory: impl AsRef<Path>, args: &LockArgs) -> Result<()> {
+    let mut sources = Sources::read(&directory)?;
+
+    let Some(source) = sources.get_mut(&args.name) else {
+        bail!("Source {} doesn't exist", args.name)
+    };
+
+    log::info!("Locking {}...", args.name);
+
+    source.lock()?;
 
     sources.write(&directory)?;
     LonNix::update(&directory)?;

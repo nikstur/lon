@@ -28,6 +28,7 @@ Commands:
   add       Add a new source
   update    Update an existing source to the newest revision
   modify    Modify an existing source
+  lock      Re-lock the hash of an existing source
   remove    Remove an existing source
   freeze    Freeze an existing source
   unfreeze  Unfreeze an existing source

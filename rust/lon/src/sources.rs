@@ -168,6 +168,14 @@ impl Source {
         }
     }
 
+    pub fn lock(&mut self) -> Result<()> {
+        match self {
+            Self::Git(s) => s.lock(&s.revision.clone()),
+            Self::GitHub(s) => s.lock(&s.revision.clone()),
+            Self::Tarball(s) => s.lock(&s.url.clone()),
+        }
+    }
+
     pub fn freeze(&mut self) {
         match self {
             Self::Git(s) => s.frozen = true,
@@ -323,12 +331,20 @@ impl GitSource {
     /// In this case this means that the revision and hash.
     fn lock(&mut self, revision: &Revision) -> Result<()> {
         let new_hash = Self::compute_hash(&self.url, revision.as_str(), self.submodules)?;
-        log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        if self.hash == new_hash {
+            log::info!("Hash hasn't changed: {new_hash}");
+        } else {
+            log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        }
         self.revision = revision.clone();
         self.hash = new_hash;
         let last_modified = git::get_last_modified(self.url.as_str(), revision.as_str())?;
         if let Some(value) = self.last_modified {
-            log::info!("Updated lastModified: {value} → {last_modified}");
+            if value == last_modified {
+                log::info!("lastModified hasn't changed: {last_modified}");
+            } else {
+                log::info!("Updated lastModified: {value} → {last_modified}");
+            }
         } else {
             log::info!("Added lastModified: {last_modified}");
         }
@@ -468,7 +484,11 @@ impl GitHubSource {
     fn lock(&mut self, revision: &Revision) -> Result<()> {
         let new_url = Self::url(&self.owner, &self.repo, revision.as_str());
         let new_hash = Self::compute_hash(&new_url)?;
-        log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        if self.hash == new_hash {
+            log::info!("Hash hasn't changed: {new_hash}");
+        } else {
+            log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        }
         self.revision = revision.clone();
         self.hash = new_hash;
         self.url = new_url;
@@ -678,7 +698,11 @@ impl TarballSource {
     /// In this case this means that the hash, and URL is updated.
     fn lock(&mut self, url: &str) -> Result<()> {
         let new_hash = Self::compute_hash(url)?;
-        log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        if self.hash == new_hash {
+            log::info!("Hash hasn't changed: {new_hash}");
+        } else {
+            log::info!("Updated hash: {} → {}", self.hash, new_hash);
+        }
         self.hash = new_hash;
         self.url = url.to_string();
         Ok(())

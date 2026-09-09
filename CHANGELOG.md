@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added a new `lock` subcommand that recomputes the hash of the current
+  revision or URL. This can be used if the hash of a source has changed but not
+  its revision or URL has stayed the same. Additionally, this enables you to
+  use Lon with a custom renovate manager.
+
 ## 1.0.0
 
 - Added the flag `--continue` to the `update` command to continue updating
