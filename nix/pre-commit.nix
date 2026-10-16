@@ -1,9 +1,8 @@
 let
   sources = import ../lon.nix;
-  pkgs = import sources.nixpkgs { };
-  pre-commit.run = pkgs.callPackage "${sources.pre-commit}/nix/run.nix" {
-    inherit pkgs;
-    tools = import "${sources.pre-commit}/nix/call-tools.nix" pkgs;
+  pre-commit = import (sources.pre-commit + "/nix/default.nix") {
+    system = builtins.currentSystem;
+    inherit (sources) nixpkgs;
     isFlakes = false;
   };
 in
