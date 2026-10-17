@@ -1,4 +1,5 @@
 {
+  stdenv,
   lib,
   rustPlatform,
   makeBinaryWrapper,
@@ -9,6 +10,7 @@
   git,
   clippy,
   rustfmt,
+  installShellFiles,
 }:
 
 let
@@ -33,6 +35,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   nativeBuildInputs = [
     makeBinaryWrapper
     pkg-config
+    installShellFiles
   ];
 
   buildInputs = [
@@ -70,6 +73,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
         git
       ]
     }
+  ''
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    installShellCompletion --cmd lon \
+      --bash <(COMPLETE=bash $out/bin/lon) \
+      --fish <(COMPLETE=fish $out/bin/lon) \
+      --zsh <(COMPLETE=zsh $out/bin/lon)
   '';
 
   stripAllList = [ "bin" ];

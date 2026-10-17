@@ -1,11 +1,13 @@
 use std::{
     env,
+    ffi::OsStr,
     path::{Path, PathBuf},
     process::ExitCode,
 };
 
 use anyhow::{Context, Result, bail};
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum, ValueHint};
+use clap_complete::{ArgValueCompleter, CompleteEnv, CompletionCandidate};
 
 use crate::{
     bot::{Forge, Forgejo, GitHub, GitLab},
@@ -32,7 +34,7 @@ pub struct Cli {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
     /// The directory containing lon.{nix,lock}
-    #[arg(short, long)]
+    #[arg(short, long, value_hint = ValueHint::DirPath)]
     directory: Option<PathBuf>,
     #[clap(subcommand)]
     commands: Commands,
@@ -107,13 +109,39 @@ enum AddCommands {
     Tarball(AddTarballArgs),
 }
 
+fn lon_names(current: &OsStr) -> Vec<CompletionCandidate> {
+    if let Ok(file) = Lock::read(default_directory()) {
+        let current = current.to_string_lossy();
+        match file {
+            Lock::V1(lock) => {
+                return lock
+                    .sources
+                    .keys()
+                    .filter_map(|name| {
+                        if name.starts_with(current.as_ref()) {
+                            Some(CompletionCandidate::new(name))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+            }
+        }
+    }
+
+    vec![]
+}
+
 #[derive(Args)]
 struct AddGitArgs {
     /// Name of the source
+    #[arg(value_hint = ValueHint::Other)]
     name: String,
     /// URL to the repository
+    #[arg(value_hint = ValueHint::Url)]
     url: String,
     /// Branch to track
+    #[arg(value_hint = ValueHint::Other)]
     branch: Option<String>,
     /// Revision to lock
     #[arg(short, long)]
@@ -131,11 +159,13 @@ struct AddGitHubArgs {
     /// An identifier made up of {owner}/{repo}, e.g. nixos/nixpkgs
     identifier: String,
     /// Branch to track
+    #[arg(value_hint = ValueHint::Other)]
     branch: Option<String>,
     /// Name of the source
     ///
     /// If you do not supply this, the repository name is used as the source name.
     #[arg(short, long)]
+    #[arg(value_hint = ValueHint::Other)]
     name: Option<String>,
     /// Revision to lock
     #[arg(short, long)]
@@ -148,8 +178,10 @@ struct AddGitHubArgs {
 #[derive(Args)]
 struct AddTarballArgs {
     /// Name of the source
+    #[arg(value_hint = ValueHint::Other)]
     name: String,
     /// URL to the tarball
+    #[arg(value_hint = ValueHint::Url)]
     url: String,
     /// Freeze the source
     #[arg(long, default_value_t = false)]
@@ -161,6 +193,7 @@ struct UpdateArgs {
     /// Name of the source
     ///
     /// If this is omitted, all sources are updated.
+    #[arg(add = ArgValueCompleter::new(lon_names))]
     name: Option<String>,
     /// Whether to commit lon.{nix,lock}.
     #[arg(short, long, default_value_t = false)]
@@ -174,6 +207,7 @@ struct UpdateArgs {
 #[derive(Args)]
 struct ModifyArgs {
     /// Name of the source
+    #[arg(add = ArgValueCompleter::new(lon_names))]
     name: String,
     /// Branch to track
     #[arg(short, long)]
@@ -189,12 +223,14 @@ struct ModifyArgs {
 #[derive(Args)]
 struct LockArgs {
     /// Name of the source
+    #[arg(add = ArgValueCompleter::new(lon_names))]
     name: String,
 }
 
 #[derive(Args)]
 struct SourceArgs {
     /// Name of the source
+    #[arg(add = ArgValueCompleter::new(lon_names))]
     name: String,
 }
 
@@ -209,8 +245,16 @@ enum BotCommands {
     Forgejo,
 }
 
+fn default_directory() -> PathBuf {
+    match std::env::var("LON_DIRECTORY") {
+        Ok(dir) => PathBuf::from(dir),
+        Err(_) => std::env::current_dir().unwrap_or_default(),
+    }
+}
+
 impl Cli {
     pub fn init(module: &str) -> ExitCode {
+        CompleteEnv::with_factory(Cli::command).complete();
         let cli = Self::parse();
 
         let _ = stderrlog::new()
@@ -222,10 +266,7 @@ impl Cli {
 
         let directory = match cli.directory {
             Some(directory) => directory,
-            None => match std::env::var("LON_DIRECTORY") {
-                Ok(dir) => PathBuf::from(dir),
-                Err(_) => std::env::current_dir().unwrap_or_default(),
-            },
+            None => default_directory(),
         };
 
         match cli.commands.call(directory) {
