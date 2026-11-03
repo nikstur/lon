@@ -17,9 +17,9 @@
       "owner": "cachix",
       "repo": "git-hooks.nix",
       "branch": "master",
-      "revision": "1ba1dbfe28738c9a71c266be6efa5b89e75491a9",
-      "url": "https://github.com/cachix/git-hooks.nix/archive/1ba1dbfe28738c9a71c266be6efa5b89e75491a9.tar.gz",
-      "hash": "sha256-VAhpCOmrun/KXimYfR8NM88bciKCui7CqHHhThSzgag="
+      "revision": "204b6977e00caac19e2313015a598543ca7be150",
+      "url": "https://github.com/cachix/git-hooks.nix/archive/204b6977e00caac19e2313015a598543ca7be150.tar.gz",
+      "hash": "sha256-Zb/0L3soxrkfcrywpfp0J++0WFLB3tzh0Xtx9up+VNc="
     }
   }
 }
