@@ -502,6 +502,22 @@ impl GitHubSource {
         revision: Option<&String>,
         url: Option<&String>,
     ) -> Result<()> {
+        if let Some(url) = url {
+            if let Some((owner, repo)) = url.split_once('/') {
+                if self.owner == owner && self.repo == repo {
+                    log::info!("Repo is already {url}");
+                } else {
+                    log::info!("Changed repo: {}/{} → {}", self.owner, self.repo, url);
+                    self.owner = owner.to_string();
+                    self.repo = repo.to_string();
+                    if branch.is_none() && revision.is_none() {
+                        self.update()?;
+                    }
+                }
+            } else {
+                bail!("Invalid GitHub owner/repo: {url}")
+            }
+        }
         if let Some(branch) = branch {
             if self.branch == *branch {
                 log::info!("Branch is already {branch}");
@@ -520,9 +536,6 @@ impl GitHubSource {
                 log::info!("Changed revision: {} → {}", self.revision, revision);
                 self.lock(&Revision::new(revision))?;
             }
-        }
-        if url.is_some() {
-            log::warn!("Cannot update URL of GitHub sources");
         }
         Ok(())
     }
